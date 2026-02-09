@@ -21,4 +21,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::put('/posts/{post}', [PostController::class, 'update'])
         ->name('posts.update');
+
+    Route::delete('/posts/{post}', [PostController::class, 'destroy'])
+        ->name('posts.destroy');
 });

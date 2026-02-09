@@ -92,4 +92,18 @@ class PostController extends Controller
 
         return response()->json($post);
     }
+
+    /**
+     * Remove the specified post from storage.
+     */
+    public function destroy(Post $post)
+    {
+        if (Auth::id() !== $post->user_id) {
+            abort(403, 'Unauthorized');
+        }
+
+        $post->delete();
+
+        return response()->json(null, 204);
+    }
 }
