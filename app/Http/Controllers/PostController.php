@@ -20,4 +20,12 @@ class PostController extends Controller
 
         return response()->json($posts);
     }
+
+    /**
+     * Show the form for creating a new post.
+     */
+    public function create()
+    {
+        return 'posts.create';
+    }
 }
