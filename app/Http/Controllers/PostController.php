@@ -28,4 +28,21 @@ class PostController extends Controller
     {
         return 'posts.create';
     }
+
+    /**
+     * Store a newly created post in storage.
+     */
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'title' => ['required', 'string', 'max:255'],
+            'content' => ['required', 'string'],
+            'is_draft' => ['boolean'],
+            'published_at' => ['nullable', 'date'],
+        ]);
+
+        $post = Auth::user()->posts()->create($validated);
+
+        return response()->json($post, 201);
+    }
 }
