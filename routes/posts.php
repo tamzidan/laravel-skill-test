@@ -12,4 +12,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::post('/posts', [PostController::class, 'store'])
         ->name('posts.store');
+
+    Route::get('/posts/{post}', [PostController::class, 'show'])
+        ->name('posts.show');
 });
