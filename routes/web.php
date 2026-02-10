@@ -3,31 +3,14 @@
 use App\Http\Controllers\PostController;
 use Illuminate\Support\Facades\Route;
 
-/*
-|--------------------------------------------------------------------------
-| 1. Home Route
-|--------------------------------------------------------------------------
-*/
 Route::get('/', function () {
-    return 'Home'; // Test Logout butuh redirect ke sini
+    return 'Home';
 })->name('home');
 
-/*
-|--------------------------------------------------------------------------
-| 2. Dummy Dashboard (PENTING AGAR TEST LOGIN LOLOS)
-|--------------------------------------------------------------------------
-| Test Login & Register mengharuskan redirect ke route bernama 'dashboard'.
-| Kita buat route sederhana saja agar test-nya hijau.
-*/
 Route::get('/dashboard', function () {
     return 'Dashboard Page';
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-/*
-|--------------------------------------------------------------------------
-| 3. Post Routes (INI TUGAS UTAMA KAMU)
-|--------------------------------------------------------------------------
-*/
 Route::get('/posts', [PostController::class, 'index'])
     ->name('posts.index');
 
@@ -51,10 +34,4 @@ Route::middleware(['auth', 'verified'])->group(function () {
 Route::get('/posts/{post}', [PostController::class, 'show'])
     ->name('posts.show');
 
-/*
-|--------------------------------------------------------------------------
-| 4. Auth Routes
-|--------------------------------------------------------------------------
-*/
-// Pastikan file auth.php ada (bawaan Laravel Breeze/Install)
 require __DIR__.'/auth.php';

@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StorePostRequest;
 use App\Http\Requests\UpdatePostRequest;
+use App\Http\Resources\PostResource;
 use App\Models\Post;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 
 class PostController extends Controller
@@ -15,7 +17,7 @@ class PostController extends Controller
     /**
      * Display a paginated list of active posts.
      */
-    public function index()
+    public function index(): JsonResponse
     {
         $posts = Post::with('user')
             ->active()
@@ -28,7 +30,7 @@ class PostController extends Controller
     /**
      * Show the form for creating a new post.
      */
-    public function create()
+    public function create(): string
     {
         return 'posts.create';
     }
@@ -36,31 +38,35 @@ class PostController extends Controller
     /**
      * Store a newly created post in storage.
      */
-    public function store(StorePostRequest $request)
+    public function store(StorePostRequest $request): JsonResponse
     {
         $post = Auth::user()->posts()->create($request->validated());
 
-        return response()->json($post, 201);
+        return response()->json(new PostResource($post), 201);
     }
 
     /**
      * Display the specified active post.
      */
-    public function show(Post $post)
+    public function show(Post $post): JsonResponse
     {
-        if ($post->is_draft || ($post->published_at && $post->published_at->isFuture())) {
+        $isActive = ! $post->is_draft
+                    && $post->published_at !== null
+                    && $post->published_at->lte(now());
+
+        if (! $isActive) {
             abort(404);
         }
 
         $post->load('user');
 
-        return response()->json($post);
+        return response()->json(new PostResource($post));
     }
 
     /**
      * Show the form for editing the specified post.
      */
-    public function edit(Post $post)
+    public function edit(Post $post): string
     {
         $this->authorize('edit', $post);
 
@@ -70,19 +76,19 @@ class PostController extends Controller
     /**
      * Update the specified post in storage.
      */
-    public function update(UpdatePostRequest $request, Post $post)
+    public function update(UpdatePostRequest $request, Post $post): JsonResponse
     {
         $this->authorize('update', $post);
 
         $post->update($request->validated());
 
-        return response()->json($post);
+        return response()->json(new PostResource($post->refresh()));
     }
 
     /**
      * Remove the specified post from storage.
      */
-    public function destroy(Post $post)
+    public function destroy(Post $post): JsonResponse
     {
         $this->authorize('delete', $post);
 
