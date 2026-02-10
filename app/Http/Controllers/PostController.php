@@ -2,21 +2,23 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StorePostRequest;
+use App\Http\Requests\UpdatePostRequest;
 use App\Models\Post;
-use Illuminate\Http\Request;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\Auth;
 
 class PostController extends Controller
 {
+    use AuthorizesRequests;
+
     /**
      * Display a paginated list of active posts.
      */
     public function index()
     {
         $posts = Post::with('user')
-            ->where('is_draft', false)
-            ->whereNotNull('published_at')
-            ->where('published_at', '<=', now())
+            ->active()
             ->latest('published_at')
             ->paginate(20);
 
@@ -34,16 +36,9 @@ class PostController extends Controller
     /**
      * Store a newly created post in storage.
      */
-    public function store(Request $request)
+    public function store(StorePostRequest $request)
     {
-        $validated = $request->validate([
-            'title' => ['required', 'string', 'max:255'],
-            'content' => ['required', 'string'],
-            'is_draft' => ['boolean'],
-            'published_at' => ['nullable', 'date'],
-        ]);
-
-        $post = Auth::user()->posts()->create($validated);
+        $post = Auth::user()->posts()->create($request->validated());
 
         return response()->json($post, 201);
     }
@@ -53,7 +48,6 @@ class PostController extends Controller
      */
     public function show(Post $post)
     {
-        // Return 404 if post is draft or scheduled for future
         if ($post->is_draft || ($post->published_at && $post->published_at->isFuture())) {
             abort(404);
         }
@@ -68,10 +62,7 @@ class PostController extends Controller
      */
     public function edit(Post $post)
     {
-        // Only post author can access
-        if (Auth::id() !== $post->user_id) {
-            abort(403, 'Unauthorized');
-        }
+        $this->authorize('edit', $post);
 
         return 'posts.edit';
     }
@@ -79,21 +70,11 @@ class PostController extends Controller
     /**
      * Update the specified post in storage.
      */
-    public function update(Request $request, Post $post)
+    public function update(UpdatePostRequest $request, Post $post)
     {
-        // Only post author can update
-        if (Auth::id() !== $post->user_id) {
-            abort(403, 'Unauthorized');
-        }
+        $this->authorize('update', $post);
 
-        $validated = $request->validate([
-            'title' => ['required', 'string', 'max:255'],
-            'content' => ['required', 'string'],
-            'is_draft' => ['boolean'],
-            'published_at' => ['nullable', 'date'],
-        ]);
-
-        $post->update($validated);
+        $post->update($request->validated());
 
         return response()->json($post);
     }
@@ -103,10 +84,7 @@ class PostController extends Controller
      */
     public function destroy(Post $post)
     {
-        // Only post author can delete
-        if (Auth::id() !== $post->user_id) {
-            abort(403, 'Unauthorized');
-        }
+        $this->authorize('delete', $post);
 
         $post->delete();
 

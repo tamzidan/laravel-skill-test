@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -19,11 +20,6 @@ class Post extends Model
         'published_at',
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
@@ -32,11 +28,18 @@ class Post extends Model
         ];
     }
 
-    /**
-     * Get the user that owns the post.
-     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Scope a query to only include active posts.
+     */
+    public function scopeActive(Builder $query): void
+    {
+        $query->where('is_draft', false)
+            ->whereNotNull('published_at')
+            ->where('published_at', '<=', now());
     }
 }
